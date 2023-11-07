@@ -1,0 +1,535 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Aquarium Feeder Monitor</title>
+	<style>
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			background: #181818;
+			color: #EFEFEF;
+			font-size: 16px;
+		}
+
+		div.container {
+			flex-wrap: nowrap;
+			min-width: 340px;
+			max-width: 640px;
+			background: #363636;
+			padding: 8px;
+			border-radius: 4px;
+			margin-left: auto;
+  			margin-right: auto;
+			margin-top: 10px;
+		}
+
+		.container>section {
+			display: flex;
+			flex-wrap: nowrap;
+		}
+
+		.input-group {
+			display: flex;
+			flex-wrap: nowrap;
+			line-height: 22px;
+			margin: 5px 0
+		}
+
+		.input-group>label {
+			display: inline-block;
+			padding-right: 10px;
+			padding-left: 8px;
+			padding-top: 6px;
+			min-width: 40%
+		}
+
+		.input-group input,
+		.input-group select {
+			flex-grow: 1;
+		}
+
+		button {
+			display: block;
+			margin: 5px;
+			padding: 0 12px;
+			border: 0;
+			line-height: 32px;
+			cursor: pointer;
+			color: #fff;
+			background: #ff3034;
+			border-radius: 5px;
+			font-size: 16px;
+			outline: 0
+		}
+
+		button:active {
+			background: #cf181c;
+		}
+
+		button.blue {
+			background: #0060b9;
+		}
+
+		@keyframes feeding {
+			from {background-color: #4f87bb;}
+			to {background-color: #004c94;}
+		}
+
+		button.blue:disabled {
+			animation-name: feeding;
+			animation-duration: 1s;
+			animation-iteration-count: infinite;
+		}
+		button.blue:active {
+			background: #004c94;
+		}
+
+		button.gray {
+			background: #696969;
+		}
+
+		button.gray:active {
+			background: #595959;
+		}
+
+		button.black {
+			background: transparent;
+			padding: 0;
+		}
+
+		button.black:active {
+			background: #181818;
+		}
+
+		input[type=range]::before {
+			content: '-';
+			display: inline-block;
+			padding: 6px 6px;
+			color: #ffcc00;
+			font-size: 18px;
+			font-weight: bold;
+			font-family: Courier;
+		}
+
+		input[type=range]::after {
+			content: '+';
+			display: inline-block;
+			padding: 6px 6px;
+			color: #00ffcc;
+			font-size: 18px;
+			font-weight: bold;
+			font-family: Courier;
+		}
+
+		input[type=range] {
+			-webkit-appearance: none;
+			width: 100%;
+			height: 32px;
+			background: #363636;
+			cursor: pointer;
+			margin: 0
+		}
+
+		input[type=range]:focus {
+			outline: 0
+		}
+
+		input[type=range]::-webkit-slider-runnable-track {
+			width: 100%;
+			height: 2px;
+			cursor: pointer;
+			background: #EFEFEF;
+			border-radius: 0;
+			border: 0 solid #EFEFEF
+		}
+
+		input[type=range]::-webkit-slider-thumb {
+			border: 1px solid rgba(0, 0, 30, 0);
+			height: 22px;
+			width: 22px;
+			border-radius: 50px;
+			background: #ff3034;
+			cursor: pointer;
+			-webkit-appearance: none;
+			margin-top: -11.5px
+		}
+
+		input[type=range].blue::-webkit-slider-thumb {
+			background: #0060b9;
+		}
+
+		input[type=range]:focus::-webkit-slider-runnable-track {
+			background: #EFEFEF
+		}
+
+		input[type=range]::-moz-range-track {
+			width: 100%;
+			height: 2px;
+			cursor: pointer;
+			background: #EFEFEF;
+			border-radius: 0;
+			border: 0 solid #EFEFEF
+		}
+
+		input[type=range]::-moz-range-thumb {
+			border: 1px solid rgba(0, 0, 30, 0);
+			height: 22px;
+			width: 22px;
+			border-radius: 50px;
+			background: #ff3034;
+			cursor: pointer
+		}
+
+		input[type=range].blue::-moz-range-thumb {
+			background: #0060b9;
+		}
+
+		input[type=range]::-ms-track {
+			width: 100%;
+			height: 2px;
+			cursor: pointer;
+			background: 0 0;
+			border-color: transparent;
+			color: transparent
+		}
+
+		input[type=range]::-ms-fill-lower {
+			background: #EFEFEF;
+			border: 0 solid #EFEFEF;
+			border-radius: 0
+		}
+
+		input[type=range]::-ms-fill-upper {
+			background: #EFEFEF;
+			border: 0 solid #EFEFEF;
+			border-radius: 0
+		}
+
+		input[type=range]::-ms-thumb {
+			border: 1px solid rgba(0, 0, 30, 0);
+			height: 22px;
+			width: 22px;
+			border-radius: 50px;
+			background: #ff3034;
+			cursor: pointer;
+			height: 2px
+		}
+
+		input[type=range].blue::-ms-thumb {
+			background: #0060b9;
+		}
+
+		input[type=range]:focus::-ms-fill-lower {
+			background: #EFEFEF
+		}
+
+		input[type=range]:focus::-ms-fill-upper {
+			background: #363636
+		}
+
+		.switch {
+			display: block;
+			position: relative;
+			line-height: 32px;
+			font-size: 16px;
+			height: 32px
+		}
+
+		.switch input {
+			outline: 0;
+			opacity: 0;
+			width: 0;
+			height: 0
+		}
+
+		.slider {
+			width: 56px;
+			height: 30px;
+			border-radius: 22px;
+			cursor: pointer;
+			background-color: grey
+		}
+
+		.slider,
+		.slider:before {
+			display: inline-block;
+			transition: .4s
+		}
+
+		.slider:before {
+			position: relative;
+			content: "";
+			border-radius: 50%;
+			height: 22px;
+			width: 22px;
+			left: 4px;
+			top: 4px;
+			background-color: #fff
+		}
+
+		input:checked+.slider {
+			background-color: #ff3034
+		}
+
+		input.blue:checked+.slider {
+			background-color: #0060b9
+		}
+
+		input:checked+.slider:before {
+			-webkit-transform: translateX(26px);
+			transform: translateX(26px)
+		}
+
+		select {
+			border: 1px solid #363636;
+			font-size: 14px;
+			height: 32px;
+			outline: 0;
+			border-radius: 5px
+		}
+
+		.hidden {
+			display: none;
+		}
+
+		img#stream {
+			width: 100%;
+			height: 100%;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div id="stream-container" class="container hidden">
+		<img id="stream" src="">
+	</div>
+	<div class="container">
+		<section>
+			<button id="feed" class="blue">Feed Now</button>
+			<button id="feedlog" class="gray">Open Events Log...</button>
+		</section>
+		<br/>
+		<div class="input-group" id="topled-group">
+			<label for="topled">Top Light (gradual)</label>
+			<div class="switch">
+				<input id="topled" type="checkbox" class="default-action blue" checked="checked">
+				<label class="slider" for="topled"></label>
+			</div>
+		</div>
+		<div class="input-group" id="topledbr-group">
+			<label for="topledbr">Top Light Brightness</label>
+			<input type="range" id="topledbr" min="20" max="80" value="60" class="default-action blue">
+		</div>
+		<div class="input-group" id="flash-group">
+			<label for="flash">Flash</label>
+			<div class="switch">
+				<input id="flash" type="checkbox" class="default-action blue" checked="checked">
+				<label class="slider" for="flash"></label>
+			</div>
+		</div>
+		<div class="input-group" id="flashbr-group">
+			<label for="flashbr">Flash Brightness</label>
+			<input type="range" id="flashbr" min="1" max="5" value="2" class="default-action blue">
+		</div>
+		<section>
+			<button id="toggle-stream">Start Stream</button>
+		</section>
+		<br/>
+		<section>
+			<button id="options" class="black">▼ Automation Options</button>
+		</section>
+		<div id="options-container" class="hidden">
+			<div class="input-group" id="feedtimes-group">
+				<label for="feedtimes">Feeds Hours (H1,H2...)</label>
+				<input type="text" id="feedtimes" class="default-action">
+			</div>
+			<div class="input-group" id="foodamount-group">
+				<label for="foodamount">Food Amount</label>
+				<select id="foodamount" class="default-action">
+					<option value="0" selected="selected">NO Feeding</option>
+					<option value="1" >1 Portion</option>
+					<option value="2">2 Portions</option>
+					<option value="3">3 Portions</option>
+					<option value="4">4 Portions</option>
+				</select>
+			</div>
+			<div class="input-group" id="lighttime-group">
+				<label for="lighttime">Light (ON,Duration) Hours (0-23)</label>
+				<input type="text" id="lighttime" class="default-action">
+			</div>
+			<div class="input-group" id="pass-group">
+				<label for="pass">Passphrase</label>
+				<input type="text" id="pass">
+			</div>
+		</div>
+	</div>
+	<script>
+		function setCookie(cname, cvalue, exdays) {
+			const d = new Date();
+			d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+			let expires = "expires="+d.toUTCString();
+			document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+		}
+
+		function getCookie(cname) {
+				let name = cname + '=';
+				let decodedCookie = decodeURIComponent(document.cookie);
+				let ca = decodedCookie.split(';');
+				for (let i = 0; i <ca.length; i++) {
+					let c = ca[i];
+					while (c.charAt(0) == ' ') {
+						c = c.substring(1);
+					}
+					if (c.indexOf(name) == 0) {
+						return c.substring(name.length, c.length);
+					}
+				}
+				return "";
+			}
+
+		document.addEventListener('DOMContentLoaded', function (event) {
+			var baseHost = document.location.origin
+			var streamUrl = baseHost.replace("8080", "8181");// + ':81'
+
+			const hide = el => {
+				el.classList.add('hidden')
+			}
+			const show = el => {
+				el.classList.remove('hidden')
+			}
+
+			const updateValue = (el, value) => {
+				let initialValue
+				if (el.type === 'checkbox') {
+					initialValue = el.checked
+					value = !!value
+					el.checked = value
+				} else {
+					initialValue = el.value
+					el.value = value
+				}
+			}
+
+			function updateConfig(el) {
+				let value
+				switch (el.type) {
+					case 'checkbox':
+						value = el.checked ? 1 : 0
+						break
+					case 'text':
+					case 'range':
+					case 'select-one':
+						value = el.value
+						break
+					case 'button':
+					case 'submit':
+						value = '1'
+						break
+					default:
+						return
+				}
+				let pass = encodeURI(document.getElementById('pass').value);
+				value = encodeURI(value);
+				const query = `${baseHost}/control?var=${el.id}&val=${value}&pass=${pass}`
+				setCookie('pass', pass, 365);
+				if (el.id == 'feed') {
+					el.disabled = true;
+					el.innerHTML = 'Feeding...';
+				}
+				fetch(query)
+					.then(response => {
+						console.log(`request to ${query} finished, status: ${response.status}`)
+						if (response.status != 200) 
+							updateStatus();
+						if (el.id == 'feed') {
+							el.disabled = false;
+							el.innerHTML = 'Feed Now';
+						}
+					})
+			}
+
+			function updateStatus() {
+				// read initial values
+				document.getElementById('pass').value = getCookie('pass');
+				fetch(`${baseHost}/status`)
+					.then(function (response) {
+						return response.json()
+					})
+					.then(function (state) {
+						document
+							.querySelectorAll('.default-action')
+							.forEach(el => {
+								updateValue(el, state[el.id])
+							})
+					})
+			}
+			
+			updateStatus();
+
+			const view = document.getElementById('stream')
+			const viewContainer = document.getElementById('stream-container')
+			const streamButton = document.getElementById('toggle-stream')
+			const closeButton = document.getElementById('close-stream')
+			const feedButton = document.getElementById('feed')
+			const optionsButton = document.getElementById('options')
+			const feedlogButton = document.getElementById('feedlog')
+			const optionsContainer = document.getElementById('options-container')
+
+			const stopStream = () => {
+				window.stop();
+				streamButton.innerHTML = 'Start Stream'
+				hide(viewContainer)
+			}
+
+			const startStream = () => {
+				view.src = `${streamUrl}/stream`
+				show(viewContainer)
+				streamButton.innerHTML = 'Stop Stream'
+			}
+
+			// Attach actions to buttons
+
+			optionsButton.onclick = () => {
+				const opstionsVisible = optionsButton.innerHTML === '▲ Hide Options'
+				if (opstionsVisible) {
+					optionsButton.innerHTML = "▼ Automation Options"
+					hide(optionsContainer)
+				} else {
+					optionsButton.innerHTML = '▲ Hide Options'
+					show(optionsContainer)
+				}
+			}
+
+			feedButton.onclick = () => {
+				updateConfig(feedButton)
+			}
+
+			feedlogButton.onclick = () => {
+				window.open(`${baseHost}/feedlog`, "_blank");
+			}
+
+			streamButton.onclick = () => {
+				const streamEnabled = streamButton.innerHTML === 'Stop Stream'
+				if (streamEnabled) {
+					stopStream()
+				} else {
+					startStream()
+				}
+			}
+
+			// Attach default on change action
+			document
+				.querySelectorAll('.default-action')
+				.forEach(el => {
+					el.onchange = () => updateConfig(el)
+				})
+
+		})
+
+	</script>
+</body>
+
+</html>

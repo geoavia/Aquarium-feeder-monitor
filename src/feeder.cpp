@@ -124,7 +124,8 @@ struct FeedEvent
 
 std::vector<FeedEvent> eventLog;
 
-#define MAX_EVENTLOG_SIZE 256
+#define MAX_EVENTLOG_SIZE 64
+#define MAX_EVENS_FILE_SIZE 2048
 
 void IRAM_ATTR ext_tmr()
 {
@@ -204,6 +205,20 @@ int get_hFeedDelta(struct tm timeinfo)
 	return dh;
 }
 
+void fileEvents()
+{
+	File file = SPIFFS.open(EVENTS_FILE_NAME, "w");
+	if (file)
+	{
+		for (uint i = 0; i < eventLog.size(); i++)
+		{
+			FeedEvent fe = eventLog[i];
+			file.printf("%d,%d,%d,%d,%d,%s,%d\n", fe.year, fe.month, fe.day, fe.hour, fe.minute, fe.type.c_str(), fe.value);
+		}
+		file.close();
+	}
+}
+
 void loadEvents()
 {
 	eventLog.clear();
@@ -230,6 +245,7 @@ void loadEvents()
 
 void saveEvent(String type, int value)
 {
+	bool truncate = false;
 	FeedEvent fe;
 	struct tm timeinfo;
 
@@ -247,10 +263,12 @@ void saveEvent(String type, int value)
 	File file = SPIFFS.open(EVENTS_FILE_NAME, "a");
 	if (file)
 	{
+		truncate = (file.size() > MAX_EVENS_FILE_SIZE);
 		file.printf("%d,%d,%d,%d,%d,%s,%d\n", fe.year, fe.month, fe.day, fe.hour, fe.minute, fe.type.c_str(), fe.value);
 		file.close();
 	}
 	set_hLastFeed(fe);
+	if (truncate) fileEvents();
 }
 
 void clearEvents()
@@ -386,7 +404,7 @@ void servoTo(int pos)
 	feedservo.write(pos);
 }
 
-void shakeIt(uint delta, uint amount = 4)
+void shakeIt(uint delta, uint amount)
 {
 	int pos = feedservo.read();
 	for (int i = 0; i < amount; i++)
@@ -408,13 +426,13 @@ void feedNow(int amount)
 	servoTo(POS_CONT);
 	for (int i = 0; i < amount; i++)
 	{
-		shakeIt(3);
+		shakeIt(3, 2);
 		delay(1000);
 		servoTo(POS_HOLE);
-		shakeIt(3);
+		shakeIt(3, 2);
 		delay(1000);
 		servoTo(POS_CONT);
-		shakeIt(3);
+		shakeIt(3, 2);
 		delay(1000);
 	}
 	saveEvent(EVENT_FEED, amount);

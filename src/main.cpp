@@ -21,14 +21,22 @@ IPAddress secondaryDNS(8, 8, 8, 8); // optional
 void setup()
 {
     Serial.begin(115200);
+
+ 	Serial.println("Serial Init");
+
     Serial.setDebugOutput(false);
     Serial.println();
 
     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
 
     beforeCameraInit();
+ 	Serial.println("beforeCameraInit");
+
     initCamera();
+ 	Serial.println("initCamera");
+
     afterCameraInit();
+ 	Serial.println("afterCameraInit");
 
     // Configures static IP address
     if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) 

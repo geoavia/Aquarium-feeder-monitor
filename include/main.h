@@ -17,8 +17,6 @@ void initCamera();
 void afterCameraInit();
 void onStartup();
 
-void setPOSHOLE(int poshole);
-void setPOSCONT(int poscont);
 void servoTo(int pos);
 void feedNow(int amount);
 void setFeedTimes(String stimes);

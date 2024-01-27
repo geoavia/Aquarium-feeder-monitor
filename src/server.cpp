@@ -192,14 +192,6 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     {
         servoTo(val.toInt());
     }
-    else if (variable.equals("poshole"))
-    {
-        setPOSHOLE(val.toInt());
-    }
-    else if (variable.equals("poscont"))
-    {
-        setPOSCONT(val.toInt());
-    }
     // camera related controls
     // else if (variable.equals("contrast"))
     //     res = s->set_contrast(s, val);

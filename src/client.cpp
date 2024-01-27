@@ -49,7 +49,7 @@ String getGlobalIpAddress()
         read_len = esp_http_client_read(client, buffer, content_length);
         if (read_len <= 0)
         {
-            ESP_LOGE(TAG, "Error read data");
+            ESP_LOGE("getGlobalIpAddress", "Error read data");
         }
         buffer[read_len] = 0;
     }

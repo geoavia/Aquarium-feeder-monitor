@@ -38,9 +38,12 @@ const char html_footer[] PROGMEM = R"===(</body></html>)===";
 
 bool b_feeder_busy = false;
 
-Servo servoN1; // used by camera pwm 0
-Servo servoN2; // used by camera pwm 1
+//Servo servoN1; // used by camera pwm 0
+//Servo servoN2; // used by camera pwm 1
 Servo feedservo;
+
+//Servo tuning
+//http://192.168.100.115:8080/control?pass=glofish&var=servo&val=17
 
 int POS_HOLE = 59; // over the feeding hole position
 int POS_CONT = 15; // under the food container position
@@ -227,27 +230,27 @@ void loadEvents()
 
 void saveEvent(String type, int value)
 {
+	FeedEvent fe;
 	struct tm timeinfo;
-	if (getLocalTime(&timeinfo))
+
+	getLocalTime(&timeinfo);
+
+	fe.year = timeinfo.tm_year + 1900;
+	fe.month = timeinfo.tm_mon + 1;
+	fe.day = timeinfo.tm_mday;
+	fe.hour = timeinfo.tm_hour;
+	fe.minute = timeinfo.tm_min;
+	fe.type = type;
+	fe.value = value;
+	if (eventLog.size() >= MAX_EVENTLOG_SIZE) eventLog.erase(eventLog.begin());
+	eventLog.push_back(fe);
+	File file = SPIFFS.open(EVENTS_FILE_NAME, "a");
+	if (file)
 	{
-		FeedEvent fe;
-		fe.year = timeinfo.tm_year + 1900;
-		fe.month = timeinfo.tm_mon + 1;
-		fe.day = timeinfo.tm_mday;
-		fe.hour = timeinfo.tm_hour;
-		fe.minute = timeinfo.tm_min;
-		fe.type = type;
-		fe.value = value;
-		if (eventLog.size() >= MAX_EVENTLOG_SIZE) eventLog.erase(eventLog.begin());
-		eventLog.push_back(fe);
-		File file = SPIFFS.open(EVENTS_FILE_NAME, "a");
-		if (file)
-		{
-			file.printf("%d,%d,%d,%d,%d,%s,%d\n", fe.year, fe.month, fe.day, fe.hour, fe.minute, fe.type.c_str(), fe.value);
-			file.close();
-		}
-		set_hLastFeed(fe);
+		file.printf("%d,%d,%d,%d,%d,%s,%d\n", fe.year, fe.month, fe.day, fe.hour, fe.minute, fe.type.c_str(), fe.value);
+		file.close();
 	}
+	set_hLastFeed(fe);
 }
 
 void clearEvents()
@@ -271,14 +274,11 @@ void loadSettings()
 			topledOnDuration = file.readStringUntil('\n').toInt();
 			globalIp = file.readStringUntil('\n');
 			globalIp.trim();
-			setPOSHOLE(file.readStringUntil('\n').toInt());
-			setPOSCONT(file.readStringUntil('\n').toInt());
 			Serial.printf("Feed amount: %d, Times: [", foodAmount);
 			for (int i = 0; i < feedCount; i++)
 				Serial.printf("%s%d", i ? "," : "", feedTimes[i]);
 			Serial.printf("]\nLight ON Time: %d, Duration: %d, Brightness: %d\n", topledOnTime, topledOnDuration, topledBrightness);
 			Serial.printf("Global IP: [%s]\n", globalIp.c_str());
-			Serial.printf("Position on hole: %d, under container: %d\n", POS_HOLE, POS_CONT);
 		}
 	}
 	file.close();
@@ -297,8 +297,6 @@ void saveSettings()
 		file.println(topledOnTime);
 		file.println(topledOnDuration);
 		file.println(globalIp);
-		file.println(POS_HOLE);
-		file.println(POS_CONT);
 	}
 	file.close();
 }
@@ -332,9 +330,9 @@ String getFeedLog()
 
 void beforeCameraInit()
 {
-	servoN1.attach(GPIO_NUM_16);  // used by camera pwm 0
-	servoN2.attach(GPIO_NUM_16);  // used by camera pwm 1
-	feedservo.setPeriodHertz(50); // standard 50 hz servo
+	//servoN1.attach(GPIO_NUM_16);  // used by camera pwm 0
+	//servoN2.attach(GPIO_NUM_16);  // used by camera pwm 1
+	//feedservo.setPeriodHertz(50); // standard 50 hz servo
 	feedservo.attach(SERVO_PIN);  // pwm 2
 
 	ledcSetup(FLASH_CHANNEL, 5000, 8);
@@ -422,20 +420,6 @@ void feedNow(int amount)
 	saveEvent(EVENT_FEED, amount);
 	Serial.println("Done");
 	b_feeder_busy = false;
-}
-
-void setPOSHOLE(int poshole)
-{
-	if (poshole > 0)
-		POS_HOLE = poshole;
-	settingsChange();
-}
-
-void setPOSCONT(int poscont)
-{
-	if (poscont > 0)
-		POS_CONT = poscont;
-	settingsChange();
 }
 
 void setFeedTimes(String stimes)
@@ -645,20 +629,12 @@ void onStartup()
 {
 	struct tm timeinfo;
 
+	configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 	checkGlobalIpAddress();
-
-	// trying to get local time - essential!
-	for (size_t i = 0; i < 10; i++)
-	{
-		configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-		if (getLocalTime(&timeinfo))
-		{
-			// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M");
-			lightCheck(timeinfo, true);
-			break;
-		}
-		sleep(10);
-	}
+	delay(1000);
+	getLocalTime(&timeinfo);
+	// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M");
+	lightCheck(timeinfo, true);
 }
 
 void feederJob()
@@ -690,12 +666,11 @@ void feederJob()
 	if (stepCount % 600 == 0) // ~ each minute
 	{
 		struct tm timeinfo;
-		if (getLocalTime(&timeinfo))
-		{
-			// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M");
-			feedCheck(timeinfo);
-			lightCheck(timeinfo, false);
-		}
+		getLocalTime(&timeinfo);
+
+		// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M");
+		feedCheck(timeinfo);
+		lightCheck(timeinfo, false);
 	}
 
 	// if (stepCount == 0) // ~ each hour

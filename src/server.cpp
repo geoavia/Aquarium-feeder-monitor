@@ -171,8 +171,6 @@ static esp_err_t cmd_handler(httpd_req_t *req)
         setTopLed(val.toInt(), true);
     else if (variable.equals("topledbr")) 
         setTopLedBrightness(val.toInt());
-    else if (variable.equals("flashbr")) 
-        setFlashBrightness(val.toInt());
     else if (variable.equals("flash")) 
         setFlash(val.toInt());
     else if (variable.equals("feedtimes")) 
@@ -222,7 +220,6 @@ static esp_err_t status_handler(httpd_req_t *req)
     // feeder settings
     p += sprintf(p, "\"topled\":%d,", getTopLed());
     p += sprintf(p, "\"topledbr\":%d,", getTopLedBrightness());
-    p += sprintf(p, "\"flashbr\":%d,", getFlashBrightness());
     p += sprintf(p, "\"flash\":%d,", getFlash());
     p += sprintf(p, "\"feedtimes\":\"%s\",", getFeedTimes().c_str());
     p += sprintf(p, "\"foodamount\":%d,", getFoodAmount());

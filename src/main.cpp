@@ -20,7 +20,7 @@ IPAddress secondaryDNS(8, 8, 8, 8); // optional
 
 void setup()
 {
-    Serial.begin(115200);
+    //Serial.begin(115200);
 
  	Serial.println("Serial Init");
 
@@ -56,11 +56,9 @@ void setup()
 
     startCameraServer();
 
-    Serial.print("Camera Ready! Use 'http://");
+    Serial.print("Device online at: 'http://");
     Serial.print(WiFi.localIP());
-    Serial.println(":8080' to connect");
-
-    saveEvent("Booted Up", 0);
+    Serial.println(":8080'");
 
     onStartup();
 }

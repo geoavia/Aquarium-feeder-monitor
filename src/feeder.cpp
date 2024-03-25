@@ -56,7 +56,6 @@ int feedTimes[MAX_FEED_COUNT] = {
 int feedCount = 0;
 int foodAmount = 0; // 0 - 4
 bool flashOn = false;
-int flashBrightness = 1; // 1 - 5
 bool topledOn = false;
 int topledBrightness = 0; // 0 - 100
 int topledOnTime = 0;	  // hour (24)
@@ -70,13 +69,12 @@ static ulong lastSaveSettingsTime = 0L;
 static ulong lastFlashTime = 0L;
 
 #define SETTINGS_SAVE_DELAY 5000
-#define FLASH_ON_DELAY 60000
+#define FLASH_ON_DELAY 10000
 
 const char *EVENTS_FILE_NAME = "/event.log";
 const char *SETTINGS_FILE_NAME = "/settings.sav";
 
 #define FLASH_PIN GPIO_NUM_4
-#define FLASH_CHANNEL 3 // pwm 3
 #define SERVO_PIN GPIO_NUM_13
 #define FEED_BUTTON_PIN GPIO_NUM_12
 #define DIMMER_ZC_PIN GPIO_NUM_14
@@ -173,14 +171,6 @@ void updateDimTarget()
 		saveEvent(EVENT_LIGHT, 0);
 		dimTargetChange = true;
 	}
-}
-
-void updateFlash()
-{
-	int duty = 250 / ((5 - flashBrightness) * 2 + 1);
-	ledcWrite(FLASH_CHANNEL, flashOn ? duty : 0);
-	if (flashOn)
-		lastFlashTime = millis();
 }
 
 void settingsChange()
@@ -286,7 +276,6 @@ void loadSettings()
 		{
 			setFeedTimes(file.readStringUntil('\n'));
 			foodAmount = file.readStringUntil('\n').toInt();
-			flashBrightness = file.readStringUntil('\n').toInt();
 			topledBrightness = file.readStringUntil('\n').toInt();
 			topledOnTime = file.readStringUntil('\n').toInt();
 			topledOnDuration = file.readStringUntil('\n').toInt();
@@ -310,7 +299,6 @@ void saveSettings()
 		Serial.println("Saving Settings");
 		file.println(getFeedTimes());
 		file.println(foodAmount);
-		file.println(flashBrightness);
 		file.println(topledBrightness);
 		file.println(topledOnTime);
 		file.println(topledOnDuration);
@@ -350,11 +338,10 @@ void beforeCameraInit()
 {
 	//servoN1.attach(GPIO_NUM_16);  // used by camera pwm 0
 	//servoN2.attach(GPIO_NUM_16);  // used by camera pwm 1
-	//feedservo.setPeriodHertz(50); // standard 50 hz servo
+	feedservo.setPeriodHertz(50); // standard 50 hz servo
 	feedservo.attach(SERVO_PIN);  // pwm 2
 
-	ledcSetup(FLASH_CHANNEL, 5000, 8);
-	ledcAttachPin(FLASH_PIN, FLASH_CHANNEL); // pwm 3
+	pinMode(FLASH_PIN, OUTPUT);
 
 	pinMode(FEED_BUTTON_PIN, INPUT_PULLUP);
 
@@ -481,21 +468,14 @@ void setFlash(bool on)
 	if (on == flashOn)
 		return;
 	flashOn = on;
-	updateFlash();
+	digitalWrite(FLASH_PIN, flashOn ? HIGH : LOW);
+	if (flashOn)
+		lastFlashTime = millis();
 }
 
 int getFlash()
 {
 	return flashOn ? 1 : 0;
-}
-
-void setFlashBrightness(int brightness)
-{
-	if (flashBrightness == brightness)
-		return;
-	flashBrightness = brightness;
-	updateFlash();
-	settingsChange();
 }
 
 void setTopLed(bool on, bool manual)
@@ -542,11 +522,6 @@ int getTopLedOnTime()
 int getTopLedOnDuration()
 {
 	return topledOnDuration;
-}
-
-int getFlashBrightness()
-{
-	return flashBrightness;
 }
 
 int getTopLedBrightness()
@@ -650,6 +625,7 @@ void onStartup()
 	configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 	checkGlobalIpAddress();
 	delay(1000);
+	saveEvent("Feeder online", 0);
 	getLocalTime(&timeinfo);
 	// Serial.println(&timeinfo, "%A, %B %d %Y %H:%M");
 	lightCheck(timeinfo, true);

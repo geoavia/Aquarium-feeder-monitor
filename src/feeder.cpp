@@ -429,18 +429,16 @@ void feedNow(int amount)
 
 void setFeedTimes(String stimes)
 {
-	String str = stimes;
 	int end = -1;
 	int beg = 0;
 	feedCount = 0;
-	while ((end = str.indexOf(",")) != -1)
+	while ((end = stimes.indexOf(",", beg)) != -1)
 	{
-		feedTimes[feedCount] = str.substring(beg, end).toInt();
+		feedTimes[feedCount] = stimes.substring(beg, end).toInt();
 		beg = end + 1;
-		str = str.substring(beg);
 		feedCount++;
 	}
-	feedTimes[feedCount] = str.toInt();
+	feedTimes[feedCount] = stimes.substring(beg).toInt();
 	feedCount++;
 	settingsChange();
 }

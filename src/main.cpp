@@ -6,9 +6,6 @@
 #include "soc/soc.h"             // disable brownout problems
 #include "soc/rtc_cntl_reg.h"    // disable brownout problems
 
-//const char *ssid = "Qarva2_4GHZ";
-//const char *password = "LvoviQarvaHQ27!56";
-
 const char *ssid = "SR-71U";
 const char *password = "BlackBird";
 

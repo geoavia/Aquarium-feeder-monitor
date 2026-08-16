@@ -46,7 +46,7 @@ Servo feedservo;
 //http://192.168.100.115:8080/control?pass=glofish&var=servo&val=17
 
 int POS_HOLE = 59; // over the feeding hole position
-int POS_CONT = 15; // under the food container position
+int POS_CONT = 14; // under the food container position
 
 #define MAX_FEED_COUNT 8
 
@@ -397,9 +397,9 @@ void shakeIt(uint delta, uint amount)
 	for (int i = 0; i < amount; i++)
 	{
 		servoTo(pos - delta);
-		delay(100);
+		delay(150);
 		servoTo(pos + delta);
-		delay(100);
+		delay(150);
 	}
 	servoTo(pos);
 }
@@ -413,15 +413,16 @@ void feedNow(int amount)
 	servoTo(POS_CONT);
 	for (int i = 0; i < amount; i++)
 	{
-		shakeIt(3, 2);
+		shakeIt(6, 2);
 		delay(1000);
 		servoTo(POS_HOLE);
-		shakeIt(3, 2);
+		shakeIt(3, 3);
 		delay(1000);
 		servoTo(POS_CONT);
-		shakeIt(3, 2);
+		shakeIt(6, 2);
 		delay(1000);
 	}
+	//shakeIt(5, 2);
 	saveEvent(EVENT_FEED, amount);
 	Serial.println("Done");
 	b_feeder_busy = false;
